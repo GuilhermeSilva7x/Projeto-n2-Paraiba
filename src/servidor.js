@@ -1,4 +1,3 @@
-require('dotenv').config();
 const express = require('express');
 const cors =  require('cors');
 const multer  = require('multer');
@@ -20,6 +19,12 @@ app.post('/api/pdf/processar', upload.single('pdf'), async(req, res) =>{
         {
             return res.status(400).json({erro : 'Nenhum pdf enviado'});
 
+        }
+
+        const apiKey = req.body.apiKey || req.body.apikey || req.headers['x-api-key'];
+
+        if(!apiKey){
+            return res.status(400).json({erro: 'Digite a API'})
         }
 
         console.log("Pdf recebido", req.file.originalname);

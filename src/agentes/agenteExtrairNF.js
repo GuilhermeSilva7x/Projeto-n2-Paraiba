@@ -1,11 +1,10 @@
 const{ GoogleGenAI} = require('@google/genai');
-const { text } = require('express');
+
 
 class agenteExtrairNF{
     constructor()
     {
-        this.ai = new GoogleGenAI({apiKey: process.env.GEMINI_API_KEY});
-
+      
     }
 
     instrucoes(){
@@ -51,11 +50,14 @@ class agenteExtrairNF{
         
     }
 
-    async executar(bufferPdf){
+    async executar(bufferPdf, apiKey){
         try{
+
+            const ai = new GoogleGenAI({apiKey: apiKey});
+
             const prompt = this.instrucoes();
 
-            const resposta = await this.ai.models.generateContent({
+            const resposta = await ai.models.generateContent({
                 model: 'gemini-2.5-flash',
                 contents: [
                     {
