@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Extrator de PDF - Sistema Administrativo</title>
+    <title>Extrator de Dados de Nota Fiscal</title>
     <link rel="stylesheet" href="ExtratorPDF.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 </head>
@@ -16,9 +16,19 @@
             </header>
             <div class="content-area">
                 <div class="card">
-                    <p class="subtitle">Carregue um PDF de nota fiscal e extraia os dados automaticamente usando IA</p>
+                    <p class="subtitle">Carregue um PDF de nota fiscal e extraia os dados </p>
                     
                     <div class="upload-section">
+                        <!-- Campo da Chave de API do Gemini (Inserido no início) -->
+                        <label for="api-key" class="upload-label" style="margin-bottom: 4px;">
+                            Chave de API do Gemini
+                        </label>
+                        <p class="input-hint" style="margin-bottom: 8px;">Cole a sua chave de API do Gemini aqui</p>
+                        <div class="file-input-wrapper" style="margin-bottom: 20px;">
+                            <input type="password" id="api-key" placeholder="Cole sua chave de API aqui..." style="width: 100%; padding: 8px 12px; border-radius: 4px; border: 1px solid #ccc; box-sizing: border-box;">
+                        </div>
+
+                        <!-- Upload do PDF (Original) -->
                         <label for="pdf-upload" class="upload-label">
                             <span class="icon"></span> Upload do PDF
                         </label>
@@ -42,33 +52,58 @@
                         <span>&lt;&gt; Dados em JSON</span>
                         <button class="btn-secondary">Copiar JSON</button>
                     </div>
-                    <pre class="json-viewer"><code>{
-  "numero": "000123456",
-  "serie": "001",
-  "dataEmissao": "2024-01-15",
-  "fornecedor": {
-    "nome": "EMPRESA FORNECEDORA LTDA",
-    "cnpj": "12.345.678/0001-90",
-    "endereco": "Rua das Empresas, 123 - São Paulo, SP"
-  },
-  "cliente": {
-    "nome": "CLIENTE EXEMPLO S.A.",
-    "cnpj": "98.765.432/0001-10",
-    "endereco": "Av. dos Clientes, 456 - Rio de Janeiro, RJ"
-  },
-  "itens": [
-    {
-      "descricao": "Produto A",
-      "quantidade": 10,
-      "valorUnitario": 50.00
-    }
-  ],
-  "valorTotal": 500.00
-}</code></pre>
-                    <p class="footer-note">Este JSON contém todos os dados extraídos da nota fiscal e pode ser usado para integração com outros sistemas.</p>
+                    <pre class="json-viewer"><code id="json-output">Aguardando PDF</code></pre>
+                    <p class="footer-note">Este JSON contém todos os dados extraídos da nota fiscal.</p>
                 </div>
             </div>
         </main>
     </div>
+
+    <script>
+        const btnExtract = document.getElementById('btn-extract');
+        const pdfInput = document.getElementById('pdf-upload');
+        const apiKeyInput = document.getElementById('api-key');
+        const jsonOutput = document.getElementById('json-output');
+
+        btnExtract.addEventListener('click', async () => {
+            if (!apiKeyInput.value.trim()) {
+                alert('Informe a Chave de API');
+                return;
+            }
+
+            if (!pdfInput.files || pdfInput.files.length === 0) {
+                alert('Selecione uma Nota Fiscal.');
+                return;
+            }
+
+            const arquivoPdf = pdfInput.files[0];
+            const apiKey = apiKeyInput.value.trim();
+            jsonOutput.textContent = "Processando o arquivo";
+
+            const formData = new FormData();
+            formData.append('pdf', arquivoPdf);
+            formData.append('apiKey', apiKey);
+
+            try {
+                const resposta = await fetch('http://localhost:3000/api/pdf/processar', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const dadosReais = await resposta.json();
+
+                if (dadosReais.erro) {
+                    jsonOutput.textContent = "Erro: " + dadosReais.erro;
+                    return;
+                }
+
+                jsonOutput.textContent = JSON.stringify(dadosReais, null, 2);
+
+            } catch (erro) {
+                console.error("Erro na comunicação:", erro);
+                jsonOutput.textContent = "Erro ao conectar ao servidor.";
+            }
+        });
+    </script>
 </body>
 </html>
