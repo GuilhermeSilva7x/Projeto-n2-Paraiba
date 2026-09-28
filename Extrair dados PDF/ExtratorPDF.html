@@ -6,6 +6,14 @@
     <title>Extrator de PDF - Sistema Administrativo</title>
     <link rel="stylesheet" href="ExtratorPDF.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            overflow: hidden; /* Força o navegador a manter uma única barra de rolagem interna */
+        }
+    </style>
 </head>
 <body>
     <div class="app-container">
@@ -40,7 +48,7 @@
                     </div>
                     <div class="json-viewer-header">
                         <span>&lt;&gt; Dados em JSON</span>
-                        <button class="btn-secondary">Copiar JSON</button>
+                        <button class="btn-secondary" id="btn-copy">Copiar JSON</button>
                     </div>
                     <pre class="json-viewer"><code>{
   "numero": "000123456",
@@ -70,5 +78,52 @@
             </div>
         </main>
     </div>
+
+    <script>
+        const btnExtract = document.getElementById('btn-extract');
+        const pdfInput = document.getElementById('pdf-upload');
+        const apiKeyInput = document.getElementById('api-key');
+        const jsonOutput = document.getElementById('json-output');
+
+        btnExtract.addEventListener('click', async () => {
+            if (!apiKeyInput.value.trim()) {
+                alert('Informe a Chave de API');
+                return;
+            }
+
+            if (!pdfInput.files || pdfInput.files.length === 0) {
+                alert('Selecione uma Nota Fiscal.');
+                return;
+            }
+
+            const arquivoPdf = pdfInput.files[0];
+            const apiKey = apiKeyInput.value.trim();
+            jsonOutput.textContent = "Processando o arquivo";
+
+            const formData = new FormData();
+            formData.append('pdf', arquivoPdf);
+            formData.append('apiKey', apiKey);
+
+            try {
+                const resposta = await fetch('http://localhost:3000/api/pdf/processar', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const dadosReais = await resposta.json();
+
+                if (dadosReais.erro) {
+                    jsonOutput.textContent = "Erro: " + dadosReais.erro;
+                    return;
+                }
+
+                jsonOutput.textContent = JSON.stringify(dadosReais, null, 2);
+
+            } catch (erro) {
+                console.error("Erro na comunicação:", erro);
+                jsonOutput.textContent = "Erro ao conectar ao servidor.";
+            }
+        });
+    </script>
 </body>
 </html>
