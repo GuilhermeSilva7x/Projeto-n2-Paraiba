@@ -29,7 +29,7 @@ app.post('/api/pdf/processar', upload.single('pdf'), async(req, res) =>{
 
         console.log("Pdf recebido", req.file.originalname);
 
-        const resultadoJSON = await agente.executar(req.file.buffer);
+        const resultadoJSON = await agente.executar(req.file.buffer, apiKey);
 
         return res.json(resultadoJSON);
 

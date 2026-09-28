@@ -51,6 +51,8 @@ class agenteExtrairNF{
     }
 
     async executar(bufferPdf, apiKey){
+
+         console.log("apiKey recebida?", !!apiKey, typeof apiKey);
         try{
 
             const ai = new GoogleGenAI({apiKey: apiKey});
@@ -58,7 +60,7 @@ class agenteExtrairNF{
             const prompt = this.instrucoes();
 
             const resposta = await ai.models.generateContent({
-                model: 'gemini-2.5-flash',
+                model: 'gemini-3.8-flash',
                 contents: [
                     {
                         inlineData:{
