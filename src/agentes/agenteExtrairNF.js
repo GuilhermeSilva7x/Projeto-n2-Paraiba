@@ -1,13 +1,15 @@
-const{ GoogleGenAI} = require('@google/genai');
+const { GoogleGenAI } = require('@google/genai');
 
+const MODELOS = [
+     'gemini-3.5-flash-lite',
+    'gemini-3.8-flash',
+    
+];
 
-class agenteExtrairNF{
-    constructor()
-    {
-      
-    }
+class agenteExtrairNF {
+    constructor() {}
 
-    instrucoes(){
+    instrucoes() {
         return `
         Voce e um agente especilizado em Notas fiscais enviadas em PDF.
         Seu objetivo e extrair os dados e responder no formato JSON seguindo esta estrutura:
@@ -47,45 +49,54 @@ class agenteExtrairNF{
         9)Investimentos(Aquisições de Máquinas, Aquisições de Implementos,Aquisições de Veículos, Aquisições de Imóveis, Infraestrutura Rural)
 
         Retorne apenas JSON puro.`;
-        
     }
 
-    async executar(bufferPdf, apiKey){
+    async executar(bufferPdf, apiKey) {
+        console.log("apiKey recebida?", !!apiKey, typeof apiKey);
 
-         console.log("apiKey recebida?", !!apiKey, typeof apiKey);
-        try{
-
-            const ai = new GoogleGenAI({apiKey: apiKey});
-
+        try {
+            const ai = new GoogleGenAI({ apiKey: apiKey });
             const prompt = this.instrucoes();
 
-            const resposta = await ai.models.generateContent({
-                model: 'gemini-3.8-flash',
-                contents: [
-                    {
-                        inlineData:{
-                            data: bufferPdf.toString('base64'),
-                            mimeType: 'application/pdf'
-                        }
-                    },
-                    prompt
-                ]
+            const conteudo = [
+                {
+                    inlineData: {
+                        data: bufferPdf.toString('base64'),
+                        mimeType: 'application/pdf'
+                    }
+                },
+                prompt
+            ];
 
-            });
+            let resposta;
+            let ultimoErro;
+
+            for (const modelo of MODELOS) {
+                try {
+                    resposta = await ai.models.generateContent({
+                        model: modelo,
+                        contents: conteudo
+                    });
+                    console.log("Modelo usado:", modelo);
+                    break;
+                } catch (erro) {
+                    ultimoErro = erro;
+                    console.log(`Modelo ${modelo} falhou (${erro.status}), tentando o próximo...`);
+                    if (![503, 429, 404].includes(erro.status)) throw erro;
+                }
+            }
+
+            if (!resposta) throw ultimoErro;
 
             let texto = resposta.text.trim();
+            texto = texto.replace(/^```json\s*/i, '').replace(/```$/i, '').trim();
 
-            texto = texto.replace(/^```json\s*/i,'').replace(/```$/i,'').trim();
-
-            const resultadoJSON =JSON.parse(texto);
-            return resultadoJSON;
-        }
-
-        catch(erro){
+            return JSON.parse(texto);
+        } catch (erro) {
             console.error("Erro no agente", erro);
             throw new Error("Falha ao processar NF :" + erro.message);
         }
-
     }
 }
- module.exports = agenteExtrairNF;
+
+module.exports = agenteExtrairNF;
