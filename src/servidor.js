@@ -3,14 +3,11 @@ const cors =  require('cors');
 const multer  = require('multer');
 const agenteExtrairNF = require('./agentes/agenteExtrairNF');
 
-const path = require('path');
-
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(express.json());
-app.use(express.static(path.join(__dirname, '..')));
 
 const upload = multer({storage : multer.memoryStorage()});
 const agente = new agenteExtrairNF();
