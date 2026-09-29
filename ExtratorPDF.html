@@ -27,7 +27,6 @@
                     <p class="subtitle">Carregue um PDF de nota fiscal e extraia os dados </p>
                     
                     <div class="upload-section">
-                        <!-- Campo da Chave de API do Gemini (Inserido no início) -->
                         <label for="api-key" class="upload-label" style="margin-bottom: 4px;">
                             Chave de API do Gemini
                         </label>
@@ -35,8 +34,6 @@
                         <div class="file-input-wrapper" style="margin-bottom: 20px;">
                             <input type="password" id="api-key" placeholder="Cole sua chave de API aqui..." style="width: 100%; padding: 8px 12px; border-radius: 4px; border: 1px solid #ccc; box-sizing: border-box;">
                         </div>
-
-                        <!-- Upload do PDF (Original) -->
                         <label for="pdf-upload" class="upload-label">
                             <span class="icon"></span> Upload do PDF
                         </label>
@@ -93,10 +90,10 @@
             formData.append('apiKey', apiKey);
 
             try {
-                const resposta = await fetch('http://localhost:3000/api/pdf/processar', {
-                    method: 'POST',
-                    body: formData
-                });
+                const resposta = await fetch('/api/pdf/processar', {
+                method: 'POST',
+                body: formData
+               });
 
                 const dadosReais = await resposta.json();
 
