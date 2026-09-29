@@ -1,23 +1,18 @@
 {
-  "version": 2,
-  "builds": [
-    {
-      "src": "src/servidor.js",
-      "use": "@vercel/node"
+  "functions": {
+    "api/**/*.js": {
+      "memory": 1024,
+      "maxDuration": 10
     }
-  ],
-  "routes": [
+  },
+  "rewrites": [
     {
-      "src": "/api/(.*)",
-      "dest": "src/servidor.js"
+      "source": "/api/(.*)",
+      "destination": "/api/index"
     },
     {
-      "src": "/",
-      "dest": "/index.html"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/$1"
+      "source": "/(.*)",
+      "destination": "/index.html"
     }
   ]
 }
