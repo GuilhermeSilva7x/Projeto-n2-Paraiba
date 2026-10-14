@@ -1,10 +1,12 @@
 
-const analiseService = require('../services/analiseService');
+const AgenteAnalisarNF = require('../agentes/agenteAnalisarNF');
 
-// Analisa o JSON recebido
+const agente = new AgenteAnalisarNF();
+
+// Analisa o JSON sem gravar dados
 async function analisarNotaFiscal(req, res) {
     try {
-        const resultado = await analiseService.analisarNotaFiscal(req.body);
+        const resultado = await agente.analisar(req.body);
 
         return res.status(200).json({
             sucesso: true,

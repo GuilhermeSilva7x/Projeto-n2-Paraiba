@@ -1,5 +1,8 @@
 
+const AgenteAnalisarNF = require('../agentes/agenteAnalisarNF');
 const contasService = require('../services/contasService');
+
+const agente = new AgenteAnalisarNF();
 
 // Trata erros das operações
 function tratarErro(erro, res) {
@@ -27,10 +30,10 @@ function tratarErro(erro, res) {
     });
 }
 
-// Salva uma conta a pagar
+// Salva usando o segundo agente
 async function salvarConta(req, res) {
     try {
-        const dados = await contasService.salvarConta(req.body);
+        const dados = await agente.salvar(req.body);
 
         return res.status(201).json({
             sucesso: true,
@@ -42,29 +45,23 @@ async function salvarConta(req, res) {
     }
 }
 
-// Lista contas com filtros
+// Lista contas ativas
 async function listarContas(req, res) {
     try {
         const resultado = await contasService.listarContas(req.query);
 
-        return res.json({
-            sucesso: true,
-            ...resultado
-        });
+        return res.json({ sucesso: true, ...resultado });
     } catch (erro) {
         return tratarErro(erro, res);
     }
 }
 
-// Busca uma conta pelo ID
+// Busca uma conta por ID
 async function buscarConta(req, res) {
     try {
         const conta = await contasService.buscarConta(req.params.id);
 
-        return res.json({
-            sucesso: true,
-            conta
-        });
+        return res.json({ sucesso: true, conta });
     } catch (erro) {
         return tratarErro(erro, res);
     }
