@@ -1,0 +1,27 @@
+
+{
+  "functions": {
+    "api/**/*.js": {
+      "memory": 1024,
+      "maxDuration": 10
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "/api/index"
+    },
+    {
+      "source": "/",
+      "destination": "/api/index"
+    },
+    {
+      "source": "/index.html",
+      "destination": "/api/index"
+    },
+    {
+      "source": "/login.html",
+      "destination": "/api/index"
+    }
+  ]
+}
