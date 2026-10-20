@@ -1,2 +1,16 @@
 node_modules/
 .env
+
+# Variáveis de ambiente
+.env
+.env.*
+!.env.example
+
+# Dependências
+node_modules/
+
+# Arquivos locais da Vercel
+.vercel/
+
+# Arquivos de teste locais
+testeBanco.js
