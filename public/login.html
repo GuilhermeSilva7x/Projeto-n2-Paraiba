@@ -1,0 +1,94 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Login | Sistema Paraíba</title>
+
+    <link rel="stylesheet" href="/login.css">
+</head>
+<body>
+
+    <main class="pagina-login">
+
+        <section class="card-login">
+
+            <header class="cabecalho">
+                <div class="icone-sistema">
+                    P
+                </div>
+
+                <h1>Sistema Paraíba</h1>
+
+                <p>
+                    Gestão Financeira
+                </p>
+
+                <span>
+                    Entre com suas credenciais
+                    para continuar.
+                </span>
+            </header>
+
+            <form id="form-login">
+
+                <div class="campo">
+                    <label for="email">
+                        E-mail
+                    </label>
+
+                    <input
+                        id="email"
+                        type="email"
+                        placeholder="Digite seu e-mail"
+                        autocomplete="username"
+                        required
+                    >
+                </div>
+
+                <div class="campo">
+                    <label for="senha">
+                        Senha
+                    </label>
+
+                    <input
+                        id="senha"
+                        type="password"
+                        placeholder="Digite sua senha"
+                        autocomplete="current-password"
+                        required
+                    >
+                </div>
+
+                <p
+                    id="mensagem"
+                    class="mensagem"
+                    role="alert"
+                    aria-live="polite"
+                    hidden
+                ></p>
+
+                <button
+                    id="btn-entrar"
+                    type="submit"
+                >
+                    Entrar no sistema
+                </button>
+
+            </form>
+
+            <footer class="rodape">
+                Acesso restrito a usuários autorizados.
+            </footer>
+
+        </section>
+
+    </main>
+
+    <script src="/login.js" defer></script>
+
+</body>
+</html>
