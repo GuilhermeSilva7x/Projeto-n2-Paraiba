@@ -5,6 +5,9 @@ const router = express.Router();
 const controller = require('../controllers/contasController');
 const manualController = require('../controllers/contasManualController');
 
+// Analisa os dados sem gravar no banco
+router.post('/analisar', controller.analisarConta);
+
 // Salva uma nota fiscal pelo agente
 router.post('/', controller.salvarConta);
 

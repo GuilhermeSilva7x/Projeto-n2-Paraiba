@@ -30,7 +30,22 @@ function tratarErro(erro, res) {
     });
 }
 
-// Salva usando o segundo agente
+// Analisa a nota sem gravar no banco
+async function analisarConta(req, res) {
+    try {
+        const analise = await agente.analisar(req.body);
+
+        return res.status(200).json({
+            sucesso: true,
+            mensagem: 'Análise realizada com sucesso!',
+            analise
+        });
+    } catch (erro) {
+        return tratarErro(erro, res);
+    }
+}
+
+// Salva a nota fiscal pelo segundo agente
 async function salvarConta(req, res) {
     try {
         const dados = await agente.salvar(req.body);
@@ -50,7 +65,10 @@ async function listarContas(req, res) {
     try {
         const resultado = await contasService.listarContas(req.query);
 
-        return res.json({ sucesso: true, ...resultado });
+        return res.json({
+            sucesso: true,
+            ...resultado
+        });
     } catch (erro) {
         return tratarErro(erro, res);
     }
@@ -61,7 +79,10 @@ async function buscarConta(req, res) {
     try {
         const conta = await contasService.buscarConta(req.params.id);
 
-        return res.json({ sucesso: true, conta });
+        return res.json({
+            sucesso: true,
+            conta
+        });
     } catch (erro) {
         return tratarErro(erro, res);
     }
@@ -85,7 +106,7 @@ async function editarConta(req, res) {
     }
 }
 
-// Inativa uma conta
+// Exclui uma conta logicamente
 async function excluirConta(req, res) {
     try {
         const conta = await contasService.excluirConta(req.params.id);
@@ -101,6 +122,7 @@ async function excluirConta(req, res) {
 }
 
 module.exports = {
+    analisarConta,
     salvarConta,
     listarContas,
     buscarConta,
