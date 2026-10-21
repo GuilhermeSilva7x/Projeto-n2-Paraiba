@@ -9,6 +9,7 @@ import { configurarNovaConta } from "./novaConta.js";
 import { configurarAnaliseNF } from "./analiseNF.js";
 import { configurarPessoas } from "./pessoas.js";
 import { configurarClassificacoes } from "./classificacoes.js";
+import { requisicao } from "./api.js";
 
 // Ícones do menu
 const icones = {
@@ -20,7 +21,7 @@ const icones = {
     `,
 
     extracao: `
-        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2-2V8Z"/>
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/>
         <path d="M14 2v6h6"/>
         <path d="M8 13h8"/>
         <path d="M8 17h8"/>
@@ -93,7 +94,97 @@ function configurarIcones() {
     }
 }
 
-// Inicializa os módulos
+// Cria o identificador de versão no rodapé
+function criarRodapeVersao() {
+    const rodapeMenu = document.querySelector(".menu-rodape");
+
+    if (!rodapeMenu || document.getElementById("versao-git")) {
+        return;
+    }
+
+    const painel = document.createElement("div");
+
+    painel.id = "versao-git";
+
+    painel.style.cssText = `
+        padding: 12px 14px 16px;
+        margin-bottom: 12px;
+        border-bottom: 1px solid #42515f;
+        color: #d6dee6;
+        font-size: 12px;
+        line-height: 1.6;
+        overflow-wrap: anywhere;
+    `;
+
+    const titulo = document.createElement("div");
+    titulo.textContent = "ÚLTIMA ATUALIZAÇÃO NO GITHUB";
+    titulo.style.cssText = `
+        color: #aebdca;
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        margin-bottom: 7px;
+    `;
+
+    const branch = document.createElement("div");
+    branch.id = "versao-git-branch";
+    branch.textContent = "Branch: consultando...";
+
+    const commit = document.createElement("div");
+    commit.id = "versao-git-commit";
+    commit.textContent = "Commit: consultando...";
+
+    painel.append(titulo, branch, commit);
+
+    rodapeMenu.prepend(painel);
+}
+
+// Consulta a versão do código executado
+async function carregarVersaoGit() {
+    const branchElemento = document.getElementById(
+        "versao-git-branch"
+    );
+
+    const commitElemento = document.getElementById(
+        "versao-git-commit"
+    );
+
+    if (!branchElemento || !commitElemento) return;
+
+    try {
+        const resposta = await requisicao("/api/versao", {
+            cache: "no-store"
+        });
+
+        const versao = resposta.versao || {};
+
+        branchElemento.textContent = versao.branch
+            ? `Branch: ${versao.branch}`
+            : "Branch: indisponível";
+
+        commitElemento.textContent = versao.commitCurto
+            ? `Commit: ${versao.commitCurto}`
+            : "Commit: indisponível";
+
+        if (versao.commit) {
+            commitElemento.title = versao.commit;
+        }
+
+    } catch (erro) {
+        console.error(
+            "Não foi possível consultar a versão:",
+            erro
+        );
+
+        branchElemento.textContent =
+            "Branch: indisponível";
+
+        commitElemento.textContent =
+            "Commit: indisponível";
+    }
+}
+
+// Inicializa os módulos do sistema
 function iniciarSistema() {
     configurarIcones();
     configurarNavegacao();
@@ -103,6 +194,10 @@ function iniciarSistema() {
     configurarAnaliseNF();
     configurarPessoas();
     configurarClassificacoes();
+
+    // Exibe branch e commit da versão executada
+    criarRodapeVersao();
+    carregarVersaoGit();
 
     abrirTela("dashboard");
 }

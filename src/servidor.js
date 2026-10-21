@@ -2,6 +2,7 @@
 const express = require("express");
 const path = require("path");
 const multer = require("multer");
+const { execFileSync } = require("child_process");
 
 const agenteExtrairNF = require(
     "./agentes/agenteExtrairNF"
@@ -69,6 +70,78 @@ app.get(
                 "../private/index.html"
             )
         );
+    }
+);
+
+// Obtém informações do Git local
+function obterGitLocal(argumentos) {
+    try {
+        return execFileSync(
+            "git",
+            argumentos,
+            {
+                cwd: path.join(__dirname, ".."),
+                encoding: "utf8",
+                timeout: 2000,
+                windowsHide: true,
+                stdio: ["ignore", "pipe", "ignore"]
+            }
+        ).trim();
+    } catch {
+        return null;
+    }
+}
+
+// Identifica a versão do código executado
+function obterVersaoSistema() {
+    const commitVercel = process.env.VERCEL_GIT_COMMIT_SHA;
+    const branchVercel = process.env.VERCEL_GIT_COMMIT_REF;
+
+    // No deploy, prioriza o commit da Vercel
+    if (process.env.VERCEL) {
+        return {
+            ambiente: "Vercel",
+            branch: branchVercel || null,
+            commit: commitVercel || null,
+            commitCurto: commitVercel
+                ? commitVercel.slice(0, 7)
+                : null
+        };
+    }
+
+    // Em execução local, consulta o Git
+    const commit = obterGitLocal([
+        "rev-parse",
+        "HEAD"
+    ]);
+
+    const branch = obterGitLocal([
+        "rev-parse",
+        "--abbrev-ref",
+        "HEAD"
+    ]);
+
+    return {
+        ambiente: "Local",
+        branch: branch || null,
+        commit: commit || null,
+        commitCurto: commit
+            ? commit.slice(0, 7)
+            : null
+    };
+}
+
+// Retorna a versão do sistema
+app.get(
+    "/api/versao",
+    exigirAutenticacao,
+    (req, res) => {
+        res.set("Cache-Control", "no-store");
+
+        return res.json({
+            sucesso: true,
+            versao: obterVersaoSistema()
+        });
     }
 );
 
@@ -167,6 +240,8 @@ if (require.main === module) {
     const PORT = process.env.PORT || 3000;
 
     app.listen(PORT, () => {
-        console.log(`Servidor rodando em http://localhost:${PORT}`);
+        console.log(
+            `Servidor rodando em http://localhost:${PORT}`
+        );
     });
 }
