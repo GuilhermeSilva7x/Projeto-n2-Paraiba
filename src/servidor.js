@@ -161,3 +161,12 @@ app.use((erro, req, res, next) => {
 });
 
 module.exports = app;
+
+// Inicia o servidor apenas em execução local
+if (require.main === module) {
+    const PORT = process.env.PORT || 3000;
+
+    app.listen(PORT, () => {
+        console.log(`Servidor rodando em http://localhost:${PORT}`);
+    });
+}
