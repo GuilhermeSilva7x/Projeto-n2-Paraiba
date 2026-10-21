@@ -817,3 +817,150 @@ button:disabled {
     }
 }
 
+
+/* Formulários de Pessoas e Classificações */
+#form-pessoas,
+#form-classificacoes {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    width: 100%;
+}
+
+/* Organização dos campos */
+#form-pessoas .campo-formulario,
+#form-classificacoes .campo-formulario {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+}
+
+/* Títulos acima dos campos */
+#form-pessoas .campo-formulario label,
+#form-classificacoes .campo-formulario label {
+    display: block;
+    margin: 0;
+    color: var(--cor-texto);
+    font-size: 14px;
+    font-weight: 600;
+}
+
+/* Inputs e seletores */
+#form-pessoas .campo-formulario input,
+#form-pessoas .campo-formulario select,
+#form-classificacoes .campo-formulario input,
+#form-classificacoes .campo-formulario select {
+    display: block;
+    width: 100%;
+    min-width: 0;
+    min-height: 50px;
+    padding: 12px 15px;
+    border: 1px solid #cbd5df;
+    border-radius: 8px;
+    background: #ffffff;
+    color: var(--cor-texto);
+    font-family: inherit;
+    font-size: 14px;
+    transition: border-color 0.2s ease;
+}
+
+/* Destaque ao selecionar um campo */
+#form-pessoas .campo-formulario input:focus,
+#form-pessoas .campo-formulario select:focus,
+#form-classificacoes .campo-formulario input:focus,
+#form-classificacoes .campo-formulario select:focus {
+    outline: 2px solid var(--cor-primaria);
+    outline-offset: 1px;
+}
+
+/* Textos de exemplo */
+#form-pessoas input::placeholder,
+#form-classificacoes input::placeholder {
+    color: #8492a0;
+}
+
+/* Botões Cancelar e Salvar */
+#form-pessoas > .barra-consulta,
+#form-classificacoes > .barra-consulta {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 8px;
+    margin-bottom: 0;
+}
+
+/* Tamanho dos botões */
+#form-pessoas > .barra-consulta button,
+#form-classificacoes > .barra-consulta button {
+    min-height: 44px;
+    padding: 11px 22px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+/* Espaçamento interno dos formulários */
+#pessoas-cadastro,
+#classificacoes-cadastro {
+    padding: 28px 30px;
+}
+
+/* Títulos dos formulários */
+#pessoas-cadastro h2,
+#classificacoes-cadastro h2 {
+    margin-bottom: 26px;
+    font-size: 18px;
+    font-weight: 650;
+}
+
+/* Filtros de Pessoas e Classificações */
+#pessoas-consulta .barra-consulta select,
+#classificacoes-consulta .barra-consulta select {
+    min-height: 44px;
+    padding: 10px 13px;
+    border: 1px solid #cbd5df;
+    border-radius: 7px;
+    background: #ffffff;
+    color: var(--cor-texto);
+    font-size: 14px;
+}
+
+/* Botões de ações nas tabelas */
+#pessoas-consulta .tabela-sistema td:last-child,
+#classificacoes-consulta .tabela-sistema td:last-child {
+    min-width: 110px;
+}
+
+#pessoas-consulta .tabela-sistema td button,
+#classificacoes-consulta .tabela-sistema td button {
+    margin: 3px 4px 3px 0;
+    padding: 7px 12px;
+    font-size: 13px;
+}
+
+/* Responsividade */
+@media (max-width: 600px) {
+    #pessoas-cadastro,
+    #classificacoes-cadastro {
+        padding: 22px 18px;
+    }
+
+    #form-pessoas > .barra-consulta,
+    #form-classificacoes > .barra-consulta {
+        justify-content: stretch;
+    }
+
+    #form-pessoas > .barra-consulta button,
+    #form-classificacoes > .barra-consulta button {
+        flex: 1 1 140px;
+    }
+
+    #pessoas-consulta .barra-consulta select,
+    #classificacoes-consulta .barra-consulta select {
+        flex: 1 1 100%;
+        width: 100%;
+    }
+}

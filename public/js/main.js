@@ -8,6 +8,7 @@ import { configurarContas } from "./contas.js";
 import { configurarNovaConta } from "./novaConta.js";
 import { configurarAnaliseNF } from "./analiseNF.js";
 import { configurarPessoas } from "./pessoas.js";
+import { configurarClassificacoes } from "./classificacoes.js";
 
 // Ícones do menu
 const icones = {
@@ -19,7 +20,7 @@ const icones = {
     `,
 
     extracao: `
-        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/>
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2-2V8Z"/>
         <path d="M14 2v6h6"/>
         <path d="M8 13h8"/>
         <path d="M8 17h8"/>
@@ -81,7 +82,6 @@ function configurarIcones() {
         }
     });
 
-    // Configura o ícone de saída
     const botaoSair = document.getElementById("btn-logout");
 
     if (botaoSair) {
@@ -93,22 +93,16 @@ function configurarIcones() {
     }
 }
 
-// Inicializa os módulos do sistema
+// Inicializa os módulos
 function iniciarSistema() {
     configurarIcones();
     configurarNavegacao();
 
-    // Consulta, edição e exclusão de contas
     configurarContas();
-
-    // Inclusão manual de contas
     configurarNovaConta();
-
-    // Análise e persistência da nota fiscal
     configurarAnaliseNF();
-
-    // Cadastro e consulta de pessoas
     configurarPessoas();
+    configurarClassificacoes();
 
     abrirTela("dashboard");
 }
