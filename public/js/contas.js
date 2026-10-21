@@ -300,8 +300,18 @@ function preencherTabela(contas) {
 }
 
 // Consulta as contas
+
+// Consulta as contas
 async function consultarContas() {
     if (estado.carregando) return;
+
+    // Limpa avisos de operações anteriores
+    const aviso = $("aviso-contas");
+
+    if (aviso) {
+        aviso.textContent = "";
+        aviso.hidden = true;
+    }
 
     definirCarregamento(true);
     mostrarMensagem("Consultando contas...");
@@ -329,6 +339,7 @@ async function consultarContas() {
         definirCarregamento(false);
     }
 }
+
 
 // Cria o formulário separado de edição
 function criarFormularioEdicao() {
