@@ -1,15 +1,13 @@
+﻿
+# Dependências
 node_modules/
-.env
 
-# Vari�veis de ambiente
+# Variáveis de ambiente
 .env
 .env.*
 !.env.example
 
-# Depend�ncias
-node_modules/
-
-# Arquivos locais da Vercel
+# Configurações locais da Vercel
 .vercel/
 
 # Arquivos de teste locais
