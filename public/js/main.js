@@ -7,6 +7,7 @@ import {
 import { configurarContas } from "./contas.js";
 import { configurarNovaConta } from "./novaConta.js";
 import { configurarAnaliseNF } from "./analiseNF.js";
+import { configurarPessoas } from "./pessoas.js";
 
 // Ícones do menu
 const icones = {
@@ -97,14 +98,17 @@ function iniciarSistema() {
     configurarIcones();
     configurarNavegacao();
 
-    // Consulta, edição e exclusão
+    // Consulta, edição e exclusão de contas
     configurarContas();
 
-    // Inclusão manual
+    // Inclusão manual de contas
     configurarNovaConta();
 
     // Análise e persistência da nota fiscal
     configurarAnaliseNF();
+
+    // Cadastro e consulta de pessoas
+    configurarPessoas();
 
     abrirTela("dashboard");
 }

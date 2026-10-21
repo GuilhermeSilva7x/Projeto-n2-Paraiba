@@ -27,7 +27,8 @@ function tratarErro(erro, res) {
         'Tipo de pessoa inválido.',
         'CPF ou CNPJ deve ter 11 ou 14 dígitos.',
         'ID inválido.',
-        'Paginação inválida.'
+        'Paginação inválida.',
+        'Ordenação inválida.'
     ];
 
     if (errosValidacao.includes(erro.message)) {
@@ -58,7 +59,7 @@ async function criarPessoa(req, res) {
     }
 }
 
-// Lista pessoas com filtros e paginação
+// Lista pessoas com filtros, ordenação e paginação
 async function listarPessoas(req, res) {
     try {
         const resultado = await pessoasService.listarPessoas(req.query);
@@ -104,7 +105,7 @@ async function editarPessoa(req, res) {
     }
 }
 
-// Inativa uma pessoa
+// Exclui uma pessoa logicamente
 async function excluirPessoa(req, res) {
     try {
         const pessoa = await pessoasService.excluirPessoa(req.params.id);
