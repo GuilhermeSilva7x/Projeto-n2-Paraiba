@@ -67,7 +67,7 @@ async function criarPessoa(dados) {
     return resultado.rows[0];
 }
 
-// Lista pessoas ativas com filtros e paginação
+// Lista pessoas ativas com filtros, ordenação e paginação
 async function listarPessoas(filtros = {}) {
     const { busca, tipo } = filtros;
     const pagina = Number(filtros.pagina || 1);
@@ -79,6 +79,26 @@ async function listarPessoas(filtros = {}) {
     ) {
         throw new Error('Paginação inválida.');
     }
+
+    const colunasPermitidas = {
+        id: 'id',
+        tipo: 'tipo',
+        razaoSocial: 'razaosocial',
+        cpfCnpj: 'cpfcnpj'
+    };
+
+    const ordenarPor = filtros.ordenarPor || 'id';
+    const direcao = String(filtros.direcao || 'ASC').toUpperCase();
+
+    if (!Object.hasOwn(colunasPermitidas, ordenarPor)) {
+        throw new Error('Ordenação inválida.');
+    }
+
+    if (!['ASC', 'DESC'].includes(direcao)) {
+        throw new Error('Ordenação inválida.');
+    }
+
+    const coluna = colunasPermitidas[ordenarPor];
 
     const condicoes = ["status = 'ATIVO'"];
     const valores = [];
@@ -112,14 +132,14 @@ async function listarPessoas(filtros = {}) {
     const total = Number(contagem.rows[0].total);
     const offset = (pagina - 1) * limite;
 
-    // Busca os registros da página
     const parametros = [...valores, limite, offset];
 
+    // Busca os registros da página com ordenação segura
     const resultado = await pool.query(
         `SELECT id, tipo, razaosocial, cpfcnpj, status
          FROM pessoas
          WHERE ${onde}
-         ORDER BY id ASC
+         ORDER BY ${coluna} ${direcao}, id ASC
          LIMIT $${parametros.length - 1}
          OFFSET $${parametros.length}`,
         parametros

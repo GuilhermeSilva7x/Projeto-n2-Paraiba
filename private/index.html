@@ -1,0 +1,667 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Sistema Paraíba | Gestão Financeira</title>
+
+    <!-- Estilos -->
+    <link rel="stylesheet" href="/ExtratorPDF.css">
+    <link rel="stylesheet" href="/css/layout.css">
+</head>
+
+<body>
+
+    <div class="sistema">
+
+        <!-- MENU LATERAL -->
+        <aside class="menu-lateral">
+
+            <div class="menu-logo">
+                Sistema Paraíba
+            </div>
+
+            <nav
+                class="menu-navegacao"
+                aria-label="Menu principal"
+            >
+
+                <button
+                    class="menu-item ativo"
+                    data-tela="dashboard"
+                    type="button"
+                >
+                    <span class="menu-icone">▦</span>
+                    Dashboard
+                </button>
+
+                <button
+                    class="menu-item"
+                    data-tela="extracao"
+                    type="button"
+                >
+                    <span class="menu-icone">▤</span>
+                    Extrair NF
+                </button>
+
+                <button
+                    class="menu-item"
+                    data-tela="contas"
+                    type="button"
+                >
+                    <span class="menu-icone">▣</span>
+                    Contas
+                </button>
+
+                <button
+                    class="menu-item"
+                    data-tela="pessoas"
+                    type="button"
+                >
+                    <span class="menu-icone">♙</span>
+                    Pessoas
+                </button>
+
+                <button
+                    class="menu-item"
+                    data-tela="classificacoes"
+                    type="button"
+                >
+                    <span class="menu-icone">◇</span>
+                    Classificações
+                </button>
+
+            </nav>
+
+            <!-- SAIR -->
+            <div class="menu-rodape">
+
+                <button
+                    id="btn-logout"
+                    type="button"
+                >
+                    <span class="menu-icone">↪</span>
+                    Sair
+                </button>
+
+            </div>
+
+        </aside>
+
+        <!-- CONTEÚDO PRINCIPAL -->
+        <main class="area-principal">
+
+            <!-- CABEÇALHO -->
+            <header class="cabecalho-sistema">
+
+                <h1 id="titulo-pagina">
+                    Dashboard
+                </h1>
+
+                <div class="usuario-sistema">
+                    <span id="usuario-email">
+                        Usuário
+                    </span>
+                </div>
+
+            </header>
+
+            <!-- DASHBOARD -->
+            <section
+                id="tela-dashboard"
+                class="tela ativa"
+            >
+
+                <div class="dashboard-cards">
+
+                    <div class="cartao-sistema">
+                        <span class="rotulo">
+                            Contas a Pagar
+                        </span>
+                        <strong>—</strong>
+                    </div>
+
+                    <div class="cartao-sistema">
+                        <span class="rotulo">
+                            Pessoas
+                        </span>
+                        <strong>—</strong>
+                    </div>
+
+                    <div class="cartao-sistema">
+                        <span class="rotulo">
+                            Classificações
+                        </span>
+                        <strong>—</strong>
+                    </div>
+
+                </div>
+
+            </section>
+
+            <!-- CONTAS A PAGAR -->
+            <section
+                id="tela-contas"
+                class="tela"
+            >
+
+                <div class="cartao-sistema">
+
+                    <h2>Consulta de contas</h2>
+
+                    <div class="barra-consulta">
+
+                        <input
+                            id="busca-contas"
+                            type="search"
+                            placeholder="Pesquisar contas..."
+                            aria-label="Pesquisar contas"
+                        >
+
+                        <button
+                            class="botao-acao"
+                            id="btn-buscar-contas"
+                            type="button"
+                        >
+                            Buscar
+                        </button>
+
+                        <button
+                            class="botao-secundario"
+                            id="btn-todas-contas"
+                            type="button"
+                        >
+                            Todos
+                        </button>
+
+                    </div>
+
+                    <div class="tabela-container">
+
+                        <table class="tabela-sistema">
+
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Fornecedor</th>
+                                    <th>Descrição</th>
+                                    <th>Valor</th>
+                                    <th>Vencimento</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+
+                            <tbody id="tabela-contas">
+
+                                <tr>
+                                    <td
+                                        colspan="6"
+                                        class="tabela-vazia"
+                                    >
+                                        Use Buscar ou Todos
+                                        para consultar.
+                                    </td>
+                                </tr>
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+            <!-- PESSOAS -->
+            <section
+                id="tela-pessoas"
+                class="tela"
+            >
+
+                <div class="cartao-sistema">
+
+                    <h2>Consulta de pessoas</h2>
+
+                    <div class="barra-consulta">
+
+                        <input
+                            id="busca-pessoas"
+                            type="search"
+                            placeholder="Nome ou CPF/CNPJ"
+                            aria-label="Pesquisar pessoas"
+                        >
+
+                        <button
+                            class="botao-acao"
+                            id="btn-buscar-pessoas"
+                            type="button"
+                        >
+                            Buscar
+                        </button>
+
+                        <button
+                            class="botao-secundario"
+                            id="btn-todas-pessoas"
+                            type="button"
+                        >
+                            Todos
+                        </button>
+
+                    </div>
+
+                    <div class="tabela-container">
+
+                        <table class="tabela-sistema">
+
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Tipo</th>
+                                    <th>Razão social</th>
+                                    <th>CPF/CNPJ</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+
+                            <tbody id="tabela-pessoas">
+
+                                <tr>
+                                    <td
+                                        colspan="5"
+                                        class="tabela-vazia"
+                                    >
+                                        Use Buscar ou Todos
+                                        para consultar.
+                                    </td>
+                                </tr>
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+            <!-- CLASSIFICAÇÕES -->
+            <section
+                id="tela-classificacoes"
+                class="tela"
+            >
+
+                <div class="cartao-sistema">
+
+                    <h2>Consulta de classificações</h2>
+
+                    <div class="barra-consulta">
+
+                        <input
+                            id="busca-classificacoes"
+                            type="search"
+                            placeholder="Pesquisar classificação..."
+                            aria-label="Pesquisar classificações"
+                        >
+
+                        <button
+                            class="botao-acao"
+                            id="btn-buscar-classificacoes"
+                            type="button"
+                        >
+                            Buscar
+                        </button>
+
+                        <button
+                            class="botao-secundario"
+                            id="btn-todas-classificacoes"
+                            type="button"
+                        >
+                            Todos
+                        </button>
+
+                    </div>
+
+                    <div class="tabela-container">
+
+                        <table class="tabela-sistema">
+
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Tipo</th>
+                                    <th>Descrição</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+
+                            <tbody id="tabela-classificacoes">
+
+                                <tr>
+                                    <td
+                                        colspan="4"
+                                        class="tabela-vazia"
+                                    >
+                                        Use Buscar ou Todos
+                                        para consultar.
+                                    </td>
+                                </tr>
+
+                            </tbody>
+
+                        </table>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+            <!-- EXTRATOR DE NOTA FISCAL -->
+            <section
+                id="tela-extracao"
+                class="tela"
+            >
+
+                <div class="content-area">
+
+                    <!-- Formulário de extração -->
+                    <div class="card">
+
+                        <h3>Extrair nota fiscal</h3>
+
+                        <div class="upload-section">
+
+                            <label
+                                for="api-key"
+                                class="upload-label"
+                            >
+                                Chave de API do Gemini
+                            </label>
+
+                            <p class="input-hint">
+                                Informe a chave de API.
+                            </p>
+
+                            <div class="file-input-wrapper">
+
+                                <input
+                                    type="password"
+                                    id="api-key"
+                                    placeholder="Digite sua chave de API"
+                                >
+
+                            </div>
+
+                            <label
+                                for="pdf-upload"
+                                class="upload-label"
+                            >
+                                Nota fiscal em PDF
+                            </label>
+
+                            <p class="input-hint">
+                                Selecione o arquivo.
+                            </p>
+
+                            <div class="file-input-wrapper">
+
+                                <input
+                                    type="file"
+                                    id="pdf-upload"
+                                    accept="application/pdf"
+                                >
+
+                            </div>
+
+                            <button
+                                class="btn-primary"
+                                id="btn-extract"
+                                type="button"
+                            >
+                                EXTRAIR DADOS
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                    <!-- Resultado da extração -->
+                    <div class="card results-card">
+
+                        <h3>Dados extraídos</h3>
+
+                        <div class="tabs">
+
+                            <button
+                                class="tab-btn active"
+                                type="button"
+                            >
+                                JSON
+                            </button>
+
+                        </div>
+
+                        <div class="json-viewer-header">
+
+                            <span>
+                                Dados em JSON
+                            </span>
+
+                            <button
+                                class="btn-secondary"
+                                id="btn-copy"
+                                type="button"
+                            >
+                                Copiar JSON
+                            </button>
+
+                        </div>
+
+                        <pre class="json-viewer"><code id="json-output">Aguardando PDF</code></pre>
+
+                    </div>
+
+                    <!-- O painel dos agentes é inserido aqui
+                         pelo módulo analiseNF.js -->
+
+                </div>
+
+            </section>
+
+        </main>
+
+    </div>
+
+    <!-- Navegação e módulos do sistema -->
+    <script
+        type="module"
+        src="/js/main.js"
+    ></script>
+
+    <!-- Extrator e autenticação -->
+    <script>
+        const btnExtract = document.getElementById("btn-extract");
+        const pdfInput = document.getElementById("pdf-upload");
+        const apiKeyInput = document.getElementById("api-key");
+        const jsonOutput = document.getElementById("json-output");
+        const btnCopy = document.getElementById("btn-copy");
+        const btnLogout = document.getElementById("btn-logout");
+
+        // Carrega o usuário autenticado
+        async function carregarUsuario() {
+            try {
+                const resposta = await fetch("/api/auth/me", {
+                    credentials: "same-origin"
+                });
+
+                if (resposta.status === 401) {
+                    window.location.replace("/login.html");
+                    return;
+                }
+
+                if (!resposta.ok) {
+                    throw new Error(
+                        "Erro ao verificar a sessão."
+                    );
+                }
+
+                const dados = await resposta.json();
+
+                document.getElementById("usuario-email")
+                    .textContent =
+                        dados.usuario?.email || "Usuário";
+
+            } catch (erro) {
+                console.error(
+                    "Erro ao carregar usuário:",
+                    erro
+                );
+            }
+        }
+
+        // Extrai os dados da nota fiscal
+        btnExtract.addEventListener("click", async () => {
+
+            const apiKey = apiKeyInput.value.trim();
+
+            if (!apiKey) {
+                alert("Informe a chave de API do Gemini.");
+                return;
+            }
+
+            if (!pdfInput.files.length) {
+                alert("Selecione uma nota fiscal em PDF.");
+                return;
+            }
+
+            const formData = new FormData();
+
+            formData.append("pdf", pdfInput.files[0]);
+            formData.append("apiKey", apiKey);
+
+            btnExtract.disabled = true;
+
+            jsonOutput.textContent = "Processando PDF...";
+
+            try {
+                const resposta = await fetch(
+                    "/api/pdf/processar",
+                    {
+                        method: "POST",
+                        credentials: "same-origin",
+                        body: formData
+                    }
+                );
+
+                if (resposta.status === 401) {
+                    window.location.replace("/login.html");
+                    return;
+                }
+
+                const dados = await resposta.json();
+
+                if (!resposta.ok || dados.erro) {
+                    throw new Error(
+                        dados.erro ||
+                        "Não foi possível extrair os dados."
+                    );
+                }
+
+                jsonOutput.textContent = JSON.stringify(
+                    dados,
+                    null,
+                    2
+                );
+
+            } catch (erro) {
+                console.error(
+                    "Erro na extração:",
+                    erro
+                );
+
+                jsonOutput.textContent =
+                    `Erro: ${erro.message}`;
+
+            } finally {
+                btnExtract.disabled = false;
+            }
+        });
+
+        // Copia o JSON extraído
+        btnCopy.addEventListener("click", async () => {
+
+            const texto = jsonOutput.textContent;
+
+            if (
+                !texto ||
+                texto === "Aguardando PDF" ||
+                texto === "Processando PDF..."
+            ) {
+                return;
+            }
+
+            try {
+                await navigator.clipboard.writeText(texto);
+
+                btnCopy.textContent = "Copiado!";
+
+                setTimeout(() => {
+                    btnCopy.textContent = "Copiar JSON";
+                }, 2000);
+
+            } catch (erro) {
+                console.error(
+                    "Erro ao copiar:",
+                    erro
+                );
+
+                alert("Não foi possível copiar o JSON.");
+            }
+        });
+
+        // Encerra a sessão
+        btnLogout.addEventListener("click", async () => {
+
+            btnLogout.disabled = true;
+
+            try {
+                const resposta = await fetch(
+                    "/api/auth/logout",
+                    {
+                        method: "POST",
+                        credentials: "same-origin"
+                    }
+                );
+
+                if (!resposta.ok) {
+                    throw new Error(
+                        "Não foi possível sair."
+                    );
+                }
+
+                window.location.replace("/login.html");
+
+            } catch (erro) {
+                console.error(
+                    "Erro ao encerrar sessão:",
+                    erro
+                );
+
+                alert("Não foi possível encerrar a sessão.");
+                btnLogout.disabled = false;
+            }
+        });
+
+        // Carrega as informações do usuário
+        carregarUsuario();
+    </script>
+
+</body>
+</html>

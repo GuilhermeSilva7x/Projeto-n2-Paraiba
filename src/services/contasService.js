@@ -22,11 +22,20 @@ function normalizarTexto(valor) {
         .toUpperCase();
 }
 
+// Normaliza número da nota fiscal
+function normalizarNumeroNota(valor) {
+    return String(valor || '')
+        .trim()
+        .replace(/[^a-zA-Z0-9]/g, '')
+        .toUpperCase();
+}
+
 // Valida identificadores
 function validarId(id) {
     if (!/^[1-9]\d*$/.test(String(id))) {
         throw criarErro('ID inválido.');
     }
+
     return String(id);
 }
 
@@ -44,9 +53,12 @@ function cpfValido(cpf) {
         }
 
         let digito = (soma * 10) % 11;
+
         if (digito === 10) digito = 0;
 
-        if (digito !== Number(cpf[tamanho])) return false;
+        if (digito !== Number(cpf[tamanho])) {
+            return false;
+        }
     }
 
     return true;
@@ -66,6 +78,7 @@ function cnpjValido(cnpj) {
         }
 
         const resto = soma % 11;
+
         return resto < 2 ? 0 : 11 - resto;
     };
 
@@ -78,8 +91,10 @@ function cnpjValido(cnpj) {
 
 // Valida datas
 function dataValida(valor) {
-    if (typeof valor !== 'string' ||
-        !/^\d{4}-\d{2}-\d{2}$/.test(valor)) {
+    if (
+        typeof valor !== 'string' ||
+        !/^\d{4}-\d{2}-\d{2}$/.test(valor)
+    ) {
         return false;
     }
 
@@ -110,8 +125,11 @@ function validarValor(valor) {
 
 // Valida o JSON extraído da nota fiscal
 function validarNota(dados) {
-    if (!dados || typeof dados !== 'object' ||
-        Array.isArray(dados)) {
+    if (
+        !dados ||
+        typeof dados !== 'object' ||
+        Array.isArray(dados)
+    ) {
         throw criarErro('JSON da nota fiscal inválido.');
     }
 
@@ -121,21 +139,57 @@ function validarNota(dados) {
 
     const cnpj = limparDocumento(fornecedor.cnpj);
     const cpf = limparDocumento(faturado.cpf);
-    const razaoSocial = String(fornecedor.razaoSocial || '').trim();
-    const nomeCompleto = String(faturado.nomeCompleto || '').trim();
-    const categoria = String(classificacao.categoria || '').trim();
-    const numeroNota = String(dados.numeroNotaFiscal || '').trim();
+
+    const razaoSocial = String(
+        fornecedor.razaoSocial || ''
+    ).trim();
+
+    const nomeCompleto = String(
+        faturado.nomeCompleto || ''
+    ).trim();
+
+    const categoria = String(
+        classificacao.categoria || ''
+    ).trim();
+
+    const numeroNotaOriginal = String(
+        dados.numeroNotaFiscal || ''
+    ).trim();
+
+    const numeroNota = normalizarNumeroNota(
+        numeroNotaOriginal
+    );
 
     if (!cnpjValido(cnpj)) {
         throw criarErro('CNPJ do fornecedor inválido.');
     }
 
-    if (!cpfValido(cpf)) {
+    // Permite CPF fictício quando habilitado para testes
+    const permitirCpfTeste =
+        process.env.PERMITIR_CPF_TESTE === 'true';
+
+    if (!permitirCpfTeste && !cpfValido(cpf)) {
         throw criarErro('CPF do faturado inválido.');
     }
 
-    if (!razaoSocial || !nomeCompleto || !categoria || !numeroNota) {
-        throw criarErro('Dados obrigatórios da nota fiscal ausentes.');
+    if (
+        permitirCpfTeste &&
+        !/^\d{11}$/.test(cpf)
+    ) {
+        throw criarErro(
+            'CPF do faturado deve conter 11 dígitos.'
+        );
+    }
+
+    if (
+        !razaoSocial ||
+        !nomeCompleto ||
+        !categoria ||
+        !numeroNota
+    ) {
+        throw criarErro(
+            'Dados obrigatórios da nota fiscal ausentes.'
+        );
     }
 
     if (
@@ -146,24 +200,36 @@ function validarNota(dados) {
         throw criarErro('Nome ou descrição muito longo.');
     }
 
-    if (!dataValida(dados.dataEmissao) ||
-        !dataValida(dados.dataVencimento)) {
-        throw criarErro('Data de emissão ou vencimento inválida.');
+    if (
+        !dataValida(dados.dataEmissao) ||
+        !dataValida(dados.dataVencimento)
+    ) {
+        throw criarErro(
+            'Data de emissão ou vencimento inválida.'
+        );
     }
 
     if (dados.dataVencimento < dados.dataEmissao) {
-        throw criarErro('Vencimento anterior à emissão.');
+        throw criarErro(
+            'Vencimento anterior à emissão.'
+        );
     }
 
     if (dados.quantidadeParcelas !== 1) {
-        throw criarErro('Somente uma parcela é permitida.');
+        throw criarErro(
+            'Somente uma parcela é permitida.'
+        );
     }
 
     const valor = validarValor(dados.valorTotal);
-    const identificacao = `NF-${cnpj}-${numeroNota}-1`;
+
+    const identificacao =
+        `NF-${cnpj}-${numeroNota}-1`;
 
     if (identificacao.length > 100) {
-        throw criarErro('Identificação da parcela muito longa.');
+        throw criarErro(
+            'Identificação da parcela muito longa.'
+        );
     }
 
     return {
@@ -173,6 +239,7 @@ function validarNota(dados) {
         nomeCompleto,
         categoria,
         numeroNota,
+        numeroNotaOriginal,
         valor,
         dataEmissao: dados.dataEmissao,
         dataVencimento: dados.dataVencimento,
@@ -180,11 +247,47 @@ function validarNota(dados) {
     };
 }
 
+// Consulta duplicidade incluindo identificações antigas
+async function verificarNotaDuplicada(client, nota) {
+    const identificacaoNormalizada =
+        nota.identificacao.replace(/[^a-zA-Z0-9]/g, '')
+            .toUpperCase();
+
+    // Bloqueia salvamentos simultâneos da mesma nota
+    await client.query(
+        `SELECT pg_advisory_xact_lock(hashtext($1))`,
+        [identificacaoNormalizada]
+    );
+
+    // Considera registros ativos e inativos
+    const resultado = await client.query(
+        `SELECT id
+         FROM parcelacontas
+         WHERE REGEXP_REPLACE(
+             UPPER(identificacao),
+             '[^A-Z0-9]',
+             '',
+             'g'
+         ) = $1
+         LIMIT 1`,
+        [identificacaoNormalizada]
+    );
+
+    if (resultado.rows.length > 0) {
+        throw criarErro(
+            'Esta nota fiscal já foi lançada.',
+            409
+        );
+    }
+}
+
 // Consulta ou cria pessoa
 async function obterPessoa(client, tipo, nome, documento) {
     const consulta = await client.query(
-        `SELECT id, status FROM pessoas
-         WHERE tipo = $1 AND cpfcnpj = $2
+        `SELECT id, status
+         FROM pessoas
+         WHERE tipo = $1
+           AND cpfcnpj = $2
          FOR UPDATE`,
         [tipo, documento]
     );
@@ -193,10 +296,16 @@ async function obterPessoa(client, tipo, nome, documento) {
         const pessoa = consulta.rows[0];
 
         if (pessoa.status !== 'ATIVO') {
-            throw criarErro(`${tipo} possui cadastro inativo.`, 409);
+            throw criarErro(
+                `${tipo} possui cadastro inativo.`,
+                409
+            );
         }
 
-        return { id: pessoa.id, criado: false };
+        return {
+            id: pessoa.id,
+            criado: false
+        };
     }
 
     const resultado = await client.query(
@@ -206,28 +315,39 @@ async function obterPessoa(client, tipo, nome, documento) {
         [tipo, nome, documento]
     );
 
-    return { id: resultado.rows[0].id, criado: true };
+    return {
+        id: resultado.rows[0].id,
+        criado: true
+    };
 }
 
 // Consulta ou cria classificação
 async function obterClassificacao(client, descricao) {
     const consulta = await client.query(
-        `SELECT id, descricao, status FROM classificacao
+        `SELECT id, descricao, status
+         FROM classificacao
          WHERE tipo = 'DESPESA'
          FOR UPDATE`
     );
 
     const encontrada = consulta.rows.find(
-        item => normalizarTexto(item.descricao) ===
+        item =>
+            normalizarTexto(item.descricao) ===
             normalizarTexto(descricao)
     );
 
     if (encontrada) {
         if (encontrada.status !== 'ATIVO') {
-            throw criarErro('Classificação possui cadastro inativo.', 409);
+            throw criarErro(
+                'Classificação possui cadastro inativo.',
+                409
+            );
         }
 
-        return { id: encontrada.id, criado: false };
+        return {
+            id: encontrada.id,
+            criado: false
+        };
     }
 
     const resultado = await client.query(
@@ -237,7 +357,10 @@ async function obterClassificacao(client, descricao) {
         [descricao]
     );
 
-    return { id: resultado.rows[0].id, criado: true };
+    return {
+        id: resultado.rows[0].id,
+        criado: true
+    };
 }
 
 // Salva movimento e parcela
@@ -248,39 +371,46 @@ async function salvarConta(dados) {
     try {
         await client.query('BEGIN');
 
-        const existente = await client.query(
-            `SELECT id FROM parcelacontas
-             WHERE identificacao = $1`,
-            [nota.identificacao]
-        );
-
-        if (existente.rows.length) {
-            throw criarErro('Esta nota fiscal já foi lançada.', 409);
-        }
+        // Impede novo lançamento da mesma nota
+        await verificarNotaDuplicada(client, nota);
 
         const fornecedor = await obterPessoa(
-            client, 'FORNECEDOR', nota.razaoSocial, nota.cnpj
+            client,
+            'FORNECEDOR',
+            nota.razaoSocial,
+            nota.cnpj
         );
 
         const faturado = await obterPessoa(
-            client, 'FATURADO', nota.nomeCompleto, nota.cpf
+            client,
+            'FATURADO',
+            nota.nomeCompleto,
+            nota.cpf
         );
 
         const classificacao = await obterClassificacao(
-            client, nota.categoria
+            client,
+            nota.categoria
         );
 
         const movimento = await client.query(
             `INSERT INTO movimentocontas
-             (tipo, fornecedorid, faturadoid, classificacaoid,
-              descricao, valortotal, dataemissao)
+             (
+                 tipo,
+                 fornecedorid,
+                 faturadoid,
+                 classificacaoid,
+                 descricao,
+                 valortotal,
+                 dataemissao
+             )
              VALUES ('APAGAR', $1, $2, $3, $4, $5, $6)
              RETURNING id`,
             [
                 fornecedor.id,
                 faturado.id,
                 classificacao.id,
-                `Nota Fiscal ${nota.numeroNota}`,
+                `Nota Fiscal ${nota.numeroNotaOriginal}`,
                 nota.valor,
                 nota.dataEmissao
             ]
@@ -288,10 +418,19 @@ async function salvarConta(dados) {
 
         const parcela = await client.query(
             `INSERT INTO parcelacontas
-             (movimentoid, identificacao, numeroparcela,
-              valor, datavencimento)
+             (
+                 movimentoid,
+                 identificacao,
+                 numeroparcela,
+                 valor,
+                 datavencimento
+             )
              VALUES ($1, $2, 1, $3, $4)
-             RETURNING id, identificacao, valor, datavencimento`,
+             RETURNING
+                 id,
+                 identificacao,
+                 valor,
+                 datavencimento`,
             [
                 movimento.rows[0].id,
                 nota.identificacao,
@@ -353,8 +492,13 @@ async function listarContas(filtros = {}) {
     const pagina = Number(filtros.pagina ?? 1);
     const limite = Number(filtros.limite ?? 10);
 
-    if (!Number.isSafeInteger(pagina) || pagina < 1 ||
-        !Number.isSafeInteger(limite) || limite < 1 || limite > 100) {
+    if (
+        !Number.isSafeInteger(pagina) ||
+        pagina < 1 ||
+        !Number.isSafeInteger(limite) ||
+        limite < 1 ||
+        limite > 100
+    ) {
         throw criarErro('Paginação inválida.');
     }
 
@@ -369,18 +513,27 @@ async function listarContas(filtros = {}) {
     };
 
     const ordenarPor = filtros.ordenarPor || 'id';
-    const direcao = String(filtros.direcao || 'asc').toUpperCase();
+    const direcao = String(
+        filtros.direcao || 'asc'
+    ).toUpperCase();
 
-    if (!colunas[ordenarPor] ||
-        !['ASC', 'DESC'].includes(direcao)) {
+    if (
+        !Object.hasOwn(colunas, ordenarPor) ||
+        !['ASC', 'DESC'].includes(direcao)
+    ) {
         throw criarErro('Ordenação inválida.');
     }
 
     const valores = [];
     let condicoes = '';
 
-    if (filtros.busca && String(filtros.busca).trim()) {
-        valores.push(`%${String(filtros.busca).trim()}%`);
+    if (
+        filtros.busca &&
+        String(filtros.busca).trim()
+    ) {
+        valores.push(
+            `%${String(filtros.busca).trim()}%`
+        );
 
         condicoes += `
             AND (
@@ -394,19 +547,28 @@ async function listarContas(filtros = {}) {
     }
 
     if (filtros.fornecedorId) {
-        valores.push(validarId(filtros.fornecedorId));
-        condicoes += ` AND m.fornecedorid = $${valores.length}`;
+        valores.push(
+            validarId(filtros.fornecedorId)
+        );
+
+        condicoes +=
+            ` AND m.fornecedorid = $${valores.length}`;
     }
 
     if (filtros.classificacaoId) {
-        valores.push(validarId(filtros.classificacaoId));
-        condicoes += ` AND m.classificacaoid = $${valores.length}`;
+        valores.push(
+            validarId(filtros.classificacaoId)
+        );
+
+        condicoes +=
+            ` AND m.classificacaoid = $${valores.length}`;
     }
 
     const sqlBase = consultaContas + condicoes;
 
     const contagem = await pool.query(
-        `SELECT COUNT(*) AS total FROM (${sqlBase}) AS resultado`,
+        `SELECT COUNT(*) AS total
+         FROM (${sqlBase}) AS resultado`,
         valores
     );
 
@@ -416,7 +578,9 @@ async function listarContas(filtros = {}) {
 
     const resultado = await pool.query(
         `${sqlBase}
-         ORDER BY ${colunas[ordenarPor]} ${direcao}, m.id ASC
+         ORDER BY
+             ${colunas[ordenarPor]} ${direcao},
+             m.id ASC
          LIMIT $${parametros.length - 1}
          OFFSET $${parametros.length}`,
         parametros
@@ -436,12 +600,16 @@ async function buscarConta(id) {
     validarId(id);
 
     const resultado = await pool.query(
-        `${consultaContas} AND m.id = $1`,
+        `${consultaContas}
+         AND m.id = $1`,
         [id]
     );
 
     if (!resultado.rows.length) {
-        throw criarErro('Conta não encontrada ou inativa.', 404);
+        throw criarErro(
+            'Conta não encontrada ou inativa.',
+            404
+        );
     }
 
     return resultado.rows[0];
@@ -450,14 +618,20 @@ async function buscarConta(id) {
 // Confirma que o cadastro relacionado está ativo
 async function conferirCadastro(client, tabela, id, tipo) {
     const resultado = await client.query(
-        `SELECT id FROM ${tabela}
-         WHERE id = $1 AND tipo = $2 AND status = 'ATIVO'
+        `SELECT id
+         FROM ${tabela}
+         WHERE id = $1
+           AND tipo = $2
+           AND status = 'ATIVO'
          FOR SHARE`,
         [id, tipo]
     );
 
     if (!resultado.rows.length) {
-        throw criarErro(`Cadastro ${tipo} não encontrado ou inativo.`, 409);
+        throw criarErro(
+            `Cadastro ${tipo} não encontrado ou inativo.`,
+            409
+        );
     }
 }
 
@@ -465,28 +639,52 @@ async function conferirCadastro(client, tabela, id, tipo) {
 async function editarConta(id, dados) {
     validarId(id);
 
-    if (!dados || typeof dados !== 'object') {
-        throw criarErro('Dados de edição inválidos.');
+    if (
+        !dados ||
+        typeof dados !== 'object'
+    ) {
+        throw criarErro(
+            'Dados de edição inválidos.'
+        );
     }
 
-    const fornecedorId = validarId(dados.fornecedorId);
-    const faturadoId = validarId(dados.faturadoId);
-    const classificacaoId = validarId(dados.classificacaoId);
-    const valor = validarValor(dados.valorTotal);
+    const fornecedorId = validarId(
+        dados.fornecedorId
+    );
 
-    if (!dataValida(dados.dataEmissao) ||
-        !dataValida(dados.dataVencimento)) {
+    const faturadoId = validarId(
+        dados.faturadoId
+    );
+
+    const classificacaoId = validarId(
+        dados.classificacaoId
+    );
+
+    const valor = validarValor(
+        dados.valorTotal
+    );
+
+    if (
+        !dataValida(dados.dataEmissao) ||
+        !dataValida(dados.dataVencimento)
+    ) {
         throw criarErro('Datas inválidas.');
     }
 
     if (dados.dataVencimento < dados.dataEmissao) {
-        throw criarErro('Vencimento anterior à emissão.');
+        throw criarErro(
+            'Vencimento anterior à emissão.'
+        );
     }
 
-    const descricao = String(dados.descricao || '').trim();
+    const descricao = String(
+        dados.descricao || ''
+    ).trim();
 
     if (descricao.length > 200) {
-        throw criarErro('Descrição muito longa.');
+        throw criarErro(
+            'Descrição muito longa.'
+        );
     }
 
     const client = await pool.connect();
@@ -495,38 +693,57 @@ async function editarConta(id, dados) {
         await client.query('BEGIN');
 
         const movimento = await client.query(
-            `SELECT id FROM movimentocontas
-             WHERE id = $1 AND tipo = 'APAGAR'
+            `SELECT id
+             FROM movimentocontas
+             WHERE id = $1
+               AND tipo = 'APAGAR'
                AND status = 'ATIVO'
              FOR UPDATE`,
             [id]
         );
 
         if (!movimento.rows.length) {
-            throw criarErro('Conta não encontrada ou inativa.', 404);
+            throw criarErro(
+                'Conta não encontrada ou inativa.',
+                404
+            );
         }
 
         await conferirCadastro(
-            client, 'pessoas', fornecedorId, 'FORNECEDOR'
+            client,
+            'pessoas',
+            fornecedorId,
+            'FORNECEDOR'
         );
 
         await conferirCadastro(
-            client, 'pessoas', faturadoId, 'FATURADO'
+            client,
+            'pessoas',
+            faturadoId,
+            'FATURADO'
         );
 
         await conferirCadastro(
-            client, 'classificacao', classificacaoId, 'DESPESA'
+            client,
+            'classificacao',
+            classificacaoId,
+            'DESPESA'
         );
 
         const parcelaAtiva = await client.query(
-            `SELECT id FROM parcelacontas
-             WHERE movimentoid = $1 AND status = 'ATIVO'
+            `SELECT id
+             FROM parcelacontas
+             WHERE movimentoid = $1
+               AND status = 'ATIVO'
              FOR UPDATE`,
             [id]
         );
 
         if (parcelaAtiva.rows.length !== 1) {
-            throw criarErro('A conta deve possuir uma parcela ativa.', 409);
+            throw criarErro(
+                'A conta deve possuir uma parcela ativa.',
+                409
+            );
         }
 
         await client.query(
@@ -551,9 +768,14 @@ async function editarConta(id, dados) {
 
         await client.query(
             `UPDATE parcelacontas
-             SET valor = $1, datavencimento = $2
+             SET valor = $1,
+                 datavencimento = $2
              WHERE id = $3`,
-            [valor, dados.dataVencimento, parcelaAtiva.rows[0].id]
+            [
+                valor,
+                dados.dataVencimento,
+                parcelaAtiva.rows[0].id
+            ]
         );
 
         await client.query('COMMIT');
@@ -579,20 +801,25 @@ async function excluirConta(id) {
         const movimento = await client.query(
             `UPDATE movimentocontas
              SET status = 'INATIVO'
-             WHERE id = $1 AND tipo = 'APAGAR'
+             WHERE id = $1
+               AND tipo = 'APAGAR'
                AND status = 'ATIVO'
              RETURNING id`,
             [id]
         );
 
         if (!movimento.rows.length) {
-            throw criarErro('Conta não encontrada ou inativa.', 404);
+            throw criarErro(
+                'Conta não encontrada ou inativa.',
+                404
+            );
         }
 
         await client.query(
             `UPDATE parcelacontas
              SET status = 'INATIVO'
-             WHERE movimentoid = $1 AND status = 'ATIVO'`,
+             WHERE movimentoid = $1
+               AND status = 'ATIVO'`,
             [id]
         );
 
@@ -615,5 +842,6 @@ module.exports = {
     listarContas,
     buscarConta,
     editarConta,
-    excluirConta
+    excluirConta,
+    validarNota
 };

@@ -1,5 +1,6 @@
 
 const pool = require('../config/database');
+const contasService = require('./contasService');
 
 // Normaliza textos para comparação
 function normalizarTexto(texto) {
@@ -71,7 +72,9 @@ async function consultarClassificacao(categoria) {
     );
 
     const encontrada = resultado.rows.find(
-        item => normalizarTexto(item.descricao) === normalizarTexto(descricao)
+        item =>
+            normalizarTexto(item.descricao) ===
+            normalizarTexto(descricao)
     );
 
     if (!encontrada) {
@@ -91,22 +94,33 @@ async function consultarClassificacao(categoria) {
 
 // Analisa os dados extraídos da nota fiscal
 async function analisarNotaFiscal(dados) {
-    if (!dados || typeof dados !== 'object' || Array.isArray(dados)) {
+    if (
+        !dados ||
+        typeof dados !== 'object' ||
+        Array.isArray(dados)
+    ) {
         const erro = new Error('JSON da nota fiscal inválido.');
         erro.status = 400;
         throw erro;
     }
 
+    // Valida a nota usando as regras do segundo agente
+    contasService.validarNota(dados);
+
     const fornecedor = dados.fornecedor || {};
     const faturado = dados.faturado || {};
     const classificacao = dados.classificacaoDespesa || {};
 
-    const [resultadoFornecedor, resultadoFaturado, resultadoClassificacao] =
-        await Promise.all([
-            consultarPessoa(fornecedor.cnpj, 'FORNECEDOR'),
-            consultarPessoa(faturado.cpf, 'FATURADO'),
-            consultarClassificacao(classificacao.categoria)
-        ]);
+    // Consulta os cadastros sem gravar dados
+    const [
+        resultadoFornecedor,
+        resultadoFaturado,
+        resultadoClassificacao
+    ] = await Promise.all([
+        consultarPessoa(fornecedor.cnpj, 'FORNECEDOR'),
+        consultarPessoa(faturado.cpf, 'FATURADO'),
+        consultarClassificacao(classificacao.categoria)
+    ]);
 
     return {
         fornecedor: {
@@ -124,6 +138,7 @@ async function analisarNotaFiscal(dados) {
                 resultadoFaturado,
                 resultadoClassificacao
             ].filter(item => item.existe).length,
+
             cadastrosNaoEncontrados: [
                 resultadoFornecedor,
                 resultadoFaturado,

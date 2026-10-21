@@ -3,14 +3,21 @@ const express = require('express');
 const router = express.Router();
 
 const controller = require('../controllers/contasController');
+const manualController = require('../controllers/contasManualController');
 
-// Salva uma conta
+// Analisa os dados sem gravar no banco
+router.post('/analisar', controller.analisarConta);
+
+// Salva uma nota fiscal pelo agente
 router.post('/', controller.salvarConta);
 
-// Lista e busca contas
+// Cadastra uma conta manualmente
+router.post('/manual', manualController.criarContaManual);
+
+// Lista contas ativas
 router.get('/', controller.listarContas);
 
-// Busca por ID
+// Busca conta por ID
 router.get('/:id', controller.buscarConta);
 
 // Edita movimento e parcela
